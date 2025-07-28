@@ -50,4 +50,33 @@ public class UserController {
         logger.debug("User saved: {}", savedUser);
         return ResponseEntity.ok(savedUser);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user){
+        logger.info("Received info to update user: {}", id );
+        return userRepository.findById(id).map(existingUser -> {
+            existingUser.setName(user.getName());
+            existingUser.setEmail(user.getEmail());
+
+            User updatedUser = userRepository.save(existingUser);
+            logger.debug("User with id {} updated successfully: {}", id, updatedUser);
+            return ResponseEntity.ok(updatedUser);
+        })
+                .orElseGet(() -> {
+                    logger.warn("User with id '{}' not found for update", id);
+                    return ResponseEntity.notFound().build();
+                });
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void>deleteUser(@PathVariable Long id){
+        logger.info("Received a request to delete an user by id: {}", id);
+        if(!userRepository.existsById(id)){
+            logger.warn("User does not exist with the id: {}", id);
+            return ResponseEntity.notFound().build();
+        }
+        userRepository.deleteById(id);
+        logger.debug("User with id {} deleted successfully", id);
+        return ResponseEntity.noContent().build();
+    }
 }
